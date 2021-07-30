@@ -4,7 +4,9 @@
 
 `PUGradientSlider` Custom UISlider with gradient color background.
 
-![Output](https://github.com/PayalUmraliya/PUGradientSlider/blob/main/output.gif)
+![Output](images/1.png)
+![Output](images/2.png)
+![Output](images/3.png)
 
 ## Installation
 

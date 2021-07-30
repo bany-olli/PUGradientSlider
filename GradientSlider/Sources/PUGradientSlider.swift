@@ -8,24 +8,21 @@
 import Foundation
 import UIKit
 
-public class PUGradientSlider
-{
-    
-    public init()
-    {
+public class PUGradientSlider {
+    private var tgl = CAGradientLayer()
+    public var startColorCGColor: CGColor = UIColor.red.cgColor
+    public var endColorCGColor: CGColor = UIColor.yellow.cgColor
+    public init() {}
+    public func setSlider(slider:UISlider) {
         
-    }
-    public func setSlider(slider:UISlider)
-    {
-        let tgl = CAGradientLayer()
         let frame = CGRect(x: 0.0, y: 0.0, width: slider.bounds.width, height: 12.0 )
         tgl.frame = frame
         
-        tgl.colors = [UIColor.red.cgColor, UIColor.yellow.cgColor, UIColor.green.cgColor]
-
+        tgl.colors = [startColorCGColor, endColorCGColor]
+        
         tgl.borderWidth = 1.5
         tgl.borderColor = UIColor.white.cgColor
- 
+        
         
         tgl.endPoint = CGPoint(x: 1.0, y:  1.0)
         tgl.startPoint = CGPoint(x: 0.0, y:  1.0)
@@ -35,27 +32,27 @@ public class PUGradientSlider
         UIGraphicsBeginImageContextWithOptions(tgl.frame.size, false, 0.0)
         tgl.render(in: UIGraphicsGetCurrentContext()!)
         let backgroundImage = UIGraphicsGetImageFromCurrentImageContext()
-
+        
         UIGraphicsEndImageContext()
         DispatchQueue.main.async {
             slider.setMaximumTrackImage(backgroundImage?.resizableImage(withCapInsets: .zero, resizingMode: .stretch),  for: .normal)
             slider.setMinimumTrackImage(backgroundImage?.resizableImage(withCapInsets:.zero, resizingMode: .stretch),  for: .normal)
-
+            
         }
-
+        
         let layerFrame = CGRect(x: 0, y: 0, width: 25.0, height: 25.0)
-
+        
         let shapeLayer = CAShapeLayer()
         shapeLayer.path = CGPath(rect: layerFrame, transform: nil)
         shapeLayer.fillColor = UIColor.white.cgColor
-
+        
         let thumb = CALayer.init()
         thumb.frame = layerFrame
         thumb.cornerRadius = layerFrame.width / 2
         thumb.addSublayer(shapeLayer)
-
+        
         UIGraphicsBeginImageContextWithOptions(thumb.frame.size, false, 0.0)
-
+        
         thumb.render(in: UIGraphicsGetCurrentContext()!)
         var thumbImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
@@ -63,7 +60,60 @@ public class PUGradientSlider
         slider.setThumbImage(thumbImage, for: .normal)
         slider.setThumbImage(thumbImage, for: .highlighted)
         slider.clipsToBounds = true
-       
+        
+    }
+    
+    public func getColor(point: CGFloat) -> UIColor {
+        
+        let startPoint = tgl.startPoint
+        let endPoint = tgl.endPoint
+        
+        if point == 1 {
+            return UIColor(cgColor: endColorCGColor)
+        }
+        if point == 0 {
+            return UIColor(cgColor: startColorCGColor)
+        }
+        
+        let x = (endPoint.x - (point)) / (endPoint.x - startPoint.x)
+        
+        if let start = tgl.colors?.first,
+           let end = tgl.colors?.last {
+            
+            let startColorCGColor = start as! CGColor
+            let endColorCGColor = end as! CGColor
+            
+            let startColor = UIColor(cgColor: startColorCGColor)
+            let endColor = UIColor(cgColor: endColorCGColor)
+            
+            var startR: CGFloat = 0
+            var startG: CGFloat = 0
+            var startB: CGFloat = 0
+            var endR: CGFloat = 0
+            var endG: CGFloat = 0
+            var endB: CGFloat = 0
+            startColor.getRed(&startR, green: &startG, blue: &startB, alpha: nil)
+            endColor.getRed(&endR, green: &endG, blue: &endB, alpha: nil)
+            
+            let r,g,b: CGFloat
+            
+            if x <= 0 {
+                r = startR
+                g = startG
+                b = startB
+            } else if x >= 1 {
+                r = endR
+                g = endG
+                b = endB
+            } else {
+                r = x * startR + (1.0 - x) * endR
+                g = x * startG + (1.0 - x) * endG
+                b = x * startB + (1.0 - x) * endB
+            }
+            
+            return UIColor(red: r, green: g, blue: b, alpha: 1)
+        }
+        return .clear
     }
 }
 extension UIImage {
@@ -85,7 +135,7 @@ extension UIImage {
             var strokeRect =  breadthRect.insetBy(dx: -width/2, dy: -width/2)
             strokeRect.origin = .init(x: width/2, y: width/2)
             UIImage(cgImage: cgImage, scale: 1, orientation: imageOrientation)
-            .draw(in: strokeRect.insetBy(dx: width/2, dy: width/2))
+                .draw(in: strokeRect.insetBy(dx: width/2, dy: width/2))
             context.cgContext.setStrokeColor(color.cgColor)
             let line: UIBezierPath = .init(ovalIn: strokeRect)
             line.lineWidth = width
